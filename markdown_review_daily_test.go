@@ -49,7 +49,6 @@ func TestParseCronSchedule(t *testing.T) {
 		{"0 9 1 * *", false, "valid monthly schedule"},
 		{"0 9 * *", true, "invalid: too few fields"},
 		{"0 9 * * * *", true, "invalid: too many fields"},
-        {"25 12 * * *", true, "valid daily schedule"},
 	}
 
 	for _, tt := range tests {
@@ -162,6 +161,121 @@ func TestSundayMatching(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("%s: MatchesTime(%q, Sunday) = %v, want %v",
 				tt.desc, tt.cronExpr, result, tt.expected)
+		}
+	}
+}
+
+func TestExtractFrontmatterData(t *testing.T) {
+	tests := []struct {
+		name             string
+		content          string
+		expectedSchedule string
+		expectedTitle    string
+		desc             string
+	}{
+		{
+			name: "no_indent.md",
+			content: `---
+title: Test Document
+review_schedule: 0 9 * * *
+---
+# Content`,
+			expectedSchedule: "0 9 * * *",
+			expectedTitle:    "Test Document",
+			desc:             "no indentation",
+		},
+		{
+			name: "with_spaces.md",
+			content: `---
+title: Spaced Document
+  review_schedule: 25 12 * * *
+---
+# Content`,
+			expectedSchedule: "25 12 * * *",
+			expectedTitle:    "Spaced Document",
+			desc:             "spaces before field",
+		},
+		{
+			name: "with_tabs.md",
+			content: "---\ntitle: Tabbed Doc\n\treview_schedule: 30 14 * * *\n---\n# Content",
+			expectedSchedule: "30 14 * * *",
+			expectedTitle:    "Tabbed Doc",
+			desc:             "tabs before field",
+		},
+		{
+			name: "quoted.md",
+			content: `---
+title: "Quoted Title"
+review_schedule: "0 8 * * 1"
+---
+# Content`,
+			expectedSchedule: "0 8 * * 1",
+			expectedTitle:    "Quoted Title",
+			desc:             "double quoted values",
+		},
+		{
+			name: "single_quoted.md",
+			content: `---
+title: 'Single Quoted'
+review_schedule: '15 16 * * *'
+---
+# Content`,
+			expectedSchedule: "15 16 * * *",
+			expectedTitle:    "Single Quoted",
+			desc:             "single quoted values",
+		},
+		{
+			name: "no_schedule.md",
+			content: `---
+title: No Schedule
+author: John
+---
+# Content`,
+			expectedSchedule: "",
+			expectedTitle:    "No Schedule",
+			desc:             "no review_schedule field",
+		},
+		{
+			name: "no_title.md",
+			content: `---
+author: Jane
+review_schedule: 0 10 * * *
+---
+# Content`,
+			expectedSchedule: "0 10 * * *",
+			expectedTitle:    "",
+			desc:             "no title field",
+		},
+	}
+
+	for _, tt := range tests {
+		// Create temporary file
+		tmpfile, err := os.CreateTemp("", tt.name)
+		if err != nil {
+			t.Fatalf("Failed to create temp file: %v", err)
+		}
+		defer os.Remove(tmpfile.Name())
+
+		if _, err := tmpfile.Write([]byte(tt.content)); err != nil {
+			t.Fatalf("Failed to write temp file: %v", err)
+		}
+		tmpfile.Close()
+
+		// Test extraction
+		schedule, title, err := ExtractFrontmatterData(tmpfile.Name())
+		if err != nil {
+			t.Errorf("%s: ExtractFrontmatterData error: %v", tt.desc, err)
+			continue
+		}
+
+		if schedule != tt.expectedSchedule {
+			t.Errorf("%s: schedule = %q, want %q",
+				tt.desc, schedule, tt.expectedSchedule)
+		}
+
+		if title != tt.expectedTitle {
+			t.Errorf("%s: title = %q, want %q",
+				tt.desc, title, tt.expectedTitle)
 		}
 	}
 }

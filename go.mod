@@ -1,3 +1,3 @@
-module check-review-schedule
+module markdown-review-daily
 
 go 1.21

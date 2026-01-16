@@ -212,5 +212,5 @@ Expected output:
 === RUN   TestSundayMatching
 --- PASS: TestSundayMatching (0.00s)
 PASS
-ok      check-review-schedule   0.001s
+ok      markdown-review-daily   0.001s
 ```

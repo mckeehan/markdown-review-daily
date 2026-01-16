@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+    "log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -160,11 +161,11 @@ func matchesCronField(field string, current, max int) bool {
 	return val == current
 }
 
-// ExtractReviewSchedule extracts the review_schedule from a markdown file's YAML frontmatter
-func ExtractReviewSchedule(filename string) (string, error) {
+// ExtractFrontmatterData extracts the review_schedule and title from a markdown file's YAML frontmatter
+func ExtractFrontmatterData(filename string) (schedule string, title string, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer file.Close()
 
@@ -187,40 +188,56 @@ func ExtractReviewSchedule(filename string) (string, error) {
 			}
 		}
 
-		// Extract review_schedule if we're in frontmatter
+		// Extract fields if we're in frontmatter
 		if inFrontmatter {
 			// Trim leading whitespace to handle indented YAML
 			trimmedLine := strings.TrimSpace(line)
+			
 			if strings.HasPrefix(trimmedLine, "review_schedule:") {
 				parts := strings.SplitN(trimmedLine, ":", 2)
 				if len(parts) == 2 {
-					schedule := strings.TrimSpace(parts[1])
+					schedule = strings.TrimSpace(parts[1])
 					// Remove quotes if present
 					schedule = strings.Trim(schedule, `"'`)
-					return schedule, nil
+				}
+			}
+			
+			if strings.HasPrefix(trimmedLine, "title:") {
+				parts := strings.SplitN(trimmedLine, ":", 2)
+				if len(parts) == 2 {
+					title = strings.TrimSpace(parts[1])
+					// Remove quotes if present
+					title = strings.Trim(title, `"'`)
 				}
 			}
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return "", nil
+	return schedule, title, nil
 }
 
 // FileInfo holds information about a matching file
 type FileInfo struct {
 	Path     string
 	Schedule string
+	Title    string
 }
 
 // ScanDirectory scans a directory for markdown files with matching review schedules
 func ScanDirectory(dir string, currentTime time.Time, exactTime bool) ([]FileInfo, error) {
 	var matches []FileInfo
 
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	// Get absolute path of the base directory for computing relative paths
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		absDir = dir
+	}
+
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -235,8 +252,8 @@ func ScanDirectory(dir string, currentTime time.Time, exactTime bool) ([]FileInf
 			return nil
 		}
 
-		// Extract review schedule
-		schedule, err := ExtractReviewSchedule(path)
+		// Extract review schedule and title
+		schedule, title, err := ExtractFrontmatterData(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: error reading %s: %v\n", path, err)
 			return nil
@@ -263,9 +280,22 @@ func ScanDirectory(dir string, currentTime time.Time, exactTime bool) ([]FileInf
 		}
 
 		if isMatch {
+			// Compute relative path from base directory
+			absPath, _ := filepath.Abs(path)
+			relPath, err := filepath.Rel(absDir, absPath)
+			if err != nil {
+				relPath = path
+			}
+
+			// If no title found, use filename without extension
+			if title == "" {
+				title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+			}
+
 			matches = append(matches, FileInfo{
-				Path:     path,
+				Path:     relPath,
 				Schedule: schedule,
+				Title:    title,
 			})
 		}
 
@@ -298,17 +328,17 @@ func main() {
 	// Get current time
 	currentTime := time.Now()
 
-	fmt.Printf("Scanning directory: %s\n", resolvedDir)
+	log.Printf("Scanning directory: %s\n", resolvedDir)
 	if resolvedDir != dir {
-		fmt.Printf("(resolved from: %s)\n", dir)
+		log.Printf("(resolved from: %s)\n", dir)
 	}
-	fmt.Printf("Current time: %s\n", currentTime.Format("2006-01-02 15:04"))
+	log.Printf("Current time: %s\n", currentTime.Format("2006-01-02 15:04"))
 	if *exactTime {
-		fmt.Println("Mode: Exact time matching (hour and minute must match)")
+		log.Println("Mode: Exact time matching (hour and minute must match)")
 	} else {
-		fmt.Println("Mode: Daily matching (any file scheduled for today)")
+		log.Println("Mode: Daily matching (any file scheduled for today)")
 	}
-	fmt.Println("----------------------------------------")
+	log.Println("----------------------------------------")
 
 	// Scan directory for matching files
 	matches, err := ScanDirectory(resolvedDir, currentTime, *exactTime)
@@ -317,16 +347,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Display results
+	// Display results as markdown links
 	for _, match := range matches {
-		fmt.Printf("✓ %s\n", match.Path)
-		fmt.Printf("  Schedule: %s\n", match.Schedule)
+		// Remove .md extension from path for wiki-link
+		pathWithoutExt := strings.TrimSuffix(match.Path, ".md")
+		log.Printf("- [%s]([[%s]])\n", match.Title, pathWithoutExt)
+		fmt.Printf("- [%s]([[%s]])\n", match.Title, pathWithoutExt)
 	}
 
-	fmt.Println("----------------------------------------")
+	log.Println("----------------------------------------")
 	if *exactTime {
-		fmt.Printf("Found %d file(s) scheduled for review right now\n", len(matches))
+		log.Printf("Found %d file(s) scheduled for review right now\n", len(matches))
 	} else {
-		fmt.Printf("Found %d file(s) scheduled for review today\n", len(matches))
+		log.Printf("Found %d file(s) scheduled for review today\n", len(matches))
 	}
 }

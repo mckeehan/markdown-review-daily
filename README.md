@@ -1,4 +1,4 @@
-# Review Schedule Checker (Go)
+# Markdown Review Daily
 
 A Go program that scans markdown files for YAML frontmatter containing `review_schedule` fields in cron format and identifies which files are scheduled for review at the current time.
 
@@ -59,6 +59,24 @@ GOOS=windows GOARCH=amd64 go build -o markdown_review_daily.exe markdown_review_
 # Scan specific directory with exact time matching
 ./markdown_review_daily --exact /home/user/notes
 ```
+
+## Output Format
+
+The program outputs results as a markdown list with wiki-style links, perfect for Obsidian:
+
+```
+Scanning directory: /Users/you/Documents/notes
+Current time: 2026-01-16 15:07
+Mode: Daily matching (any file scheduled for today)
+----------------------------------------
+- [movies]([[movies]])
+- [Weekly Review]([[weekly/review]])
+- [Project Planning]([[projects/planning]])
+----------------------------------------
+Found 3 file(s) scheduled for review today
+```
+
+The output can be directly copied into an Obsidian note and the wiki-links will work!
 
 ## Cron Format
 
@@ -152,13 +170,12 @@ review_schedule: "0 8,12,17 * * *"
 ## Output Example
 
 ```
-Scanning directory: ./documents
+Scanning directory: /Users/you/Documents
 Current time: 2026-01-15 18:55
+Mode: Daily matching (any file scheduled for today)
 ----------------------------------------
-✓ ./documents/daily_standup.md
-  Schedule: 0 9 * * *
-✓ ./documents/weekly_review.md
-  Schedule: 0 10 * * 1
+- [Daily Standup]([[daily_standup]])
+- [Weekly Review]([[weekly_review]])
 ----------------------------------------
 Found 2 file(s) scheduled for review today
 ```
@@ -183,11 +200,12 @@ Found 2 file(s) scheduled for review today
 The program is organized into several key functions:
 
 - **`ParseCronSchedule`**: Parses a cron expression string into a structured format
-- **`MatchesTime`**: Checks if a cron schedule matches a given time
+- **`MatchesToday`**: Checks if today is a scheduled day (ignores hour/minute)
+- **`MatchesTime`**: Checks if a cron schedule matches a given time exactly (includes hour/minute)
 - **`matchesCronField`**: Handles matching individual cron fields (supports wildcards, ranges, steps, and lists)
-- **`ExtractReviewSchedule`**: Reads YAML frontmatter from markdown files
+- **`ExtractFrontmatterData`**: Reads YAML frontmatter from markdown files to extract title and review_schedule
 - **`ScanDirectory`**: Recursively scans directories for matching files
-- **`main`**: Orchestrates the scanning and displays results
+- **`main`**: Orchestrates the scanning and displays results as markdown links
 
 ## Error Handling
 
