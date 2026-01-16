@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-    "log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -328,17 +327,17 @@ func main() {
 	// Get current time
 	currentTime := time.Now()
 
-	log.Printf("Scanning directory: %s\n", resolvedDir)
+	fmt.Printf("Scanning directory: %s\n", resolvedDir)
 	if resolvedDir != dir {
-		log.Printf("(resolved from: %s)\n", dir)
+		fmt.Printf("(resolved from: %s)\n", dir)
 	}
-	log.Printf("Current time: %s\n", currentTime.Format("2006-01-02 15:04"))
+	fmt.Printf("Current time: %s\n", currentTime.Format("2006-01-02 15:04"))
 	if *exactTime {
-		log.Println("Mode: Exact time matching (hour and minute must match)")
+		fmt.Println("Mode: Exact time matching (hour and minute must match)")
 	} else {
-		log.Println("Mode: Daily matching (any file scheduled for today)")
+		fmt.Println("Mode: Daily matching (any file scheduled for today)")
 	}
-	log.Println("----------------------------------------")
+	fmt.Println("----------------------------------------")
 
 	// Scan directory for matching files
 	matches, err := ScanDirectory(resolvedDir, currentTime, *exactTime)
@@ -351,14 +350,13 @@ func main() {
 	for _, match := range matches {
 		// Remove .md extension from path for wiki-link
 		pathWithoutExt := strings.TrimSuffix(match.Path, ".md")
-		log.Printf("- [%s]([[%s]])\n", match.Title, pathWithoutExt)
-		fmt.Printf("- [%s]([[%s]])\n", match.Title, pathWithoutExt)
+		fmt.Printf("- [[%s|%s]]\n", pathWithoutExt, match.Title)
 	}
 
-	log.Println("----------------------------------------")
+	fmt.Println("----------------------------------------")
 	if *exactTime {
-		log.Printf("Found %d file(s) scheduled for review right now\n", len(matches))
+		fmt.Printf("Found %d file(s) scheduled for review right now\n", len(matches))
 	} else {
-		log.Printf("Found %d file(s) scheduled for review today\n", len(matches))
+		fmt.Printf("Found %d file(s) scheduled for review today\n", len(matches))
 	}
 }

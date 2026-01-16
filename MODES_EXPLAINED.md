@@ -7,7 +7,7 @@ The program now supports two modes of operation:
 Shows all files scheduled for review **today**, regardless of what time it currently is.
 
 ```bash
-./markdown_review_daily ./docs
+./check_review_schedule ./docs
 ```
 
 ### Example
@@ -24,7 +24,7 @@ This is useful for getting a morning reminder of all reviews due that day.
 Shows only files scheduled for the **current hour and minute**.
 
 ```bash
-./markdown_review_daily --exact ./docs
+./check_review_schedule --exact ./docs
 ```
 
 ### Example
@@ -49,7 +49,7 @@ Run once in the morning to see everything due today:
 ```bash
 #!/bin/bash
 # Run at 8 AM daily
-0 8 * * * /usr/local/bin/markdown_review_daily ~/documents | mail -s "Today's Reviews" you@example.com
+0 8 * * * /usr/local/bin/check_review_schedule ~/documents | mail -s "Today's Reviews" you@example.com
 ```
 
 Output at 8 AM would show:
@@ -66,7 +66,7 @@ Run every 15 minutes to notify only when reviews are due:
 ```bash
 #!/bin/bash
 # Run every 15 minutes
-*/15 * * * * /usr/local/bin/markdown_review_daily --exact ~/documents && notify-send "Review Due!"
+*/15 * * * * /usr/local/bin/check_review_schedule --exact ~/documents && notify-send "Review Due!"
 ```
 
 At 9:00 AM would show only:
@@ -106,10 +106,10 @@ review_schedule: "0 9 * * *"
 
 Test daily mode (should show if today matches):
 ```bash
-./markdown_review_daily
+./check_review_schedule
 ```
 
 Test exact mode (should show only at 9:00 AM):
 ```bash
-./markdown_review_daily --exact
+./check_review_schedule --exact
 ```

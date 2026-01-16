@@ -69,14 +69,14 @@ Scanning directory: /Users/you/Documents/notes
 Current time: 2026-01-16 15:07
 Mode: Daily matching (any file scheduled for today)
 ----------------------------------------
-- [movies]([[movies]])
-- [Weekly Review]([[weekly/review]])
-- [Project Planning]([[projects/planning]])
+- [[movies|Movies]]
+- [[weekly/review|Weekly Review]]
+- [[projects/planning|Project Planning]]
 ----------------------------------------
 Found 3 file(s) scheduled for review today
 ```
 
-The output can be directly copied into an Obsidian note and the wiki-links will work!
+The output uses Obsidian's wikilink format with the vertical bar (`|`) to set custom display text. The links can be directly copied into an Obsidian note!
 
 ## Cron Format
 
@@ -174,8 +174,8 @@ Scanning directory: /Users/you/Documents
 Current time: 2026-01-15 18:55
 Mode: Daily matching (any file scheduled for today)
 ----------------------------------------
-- [Daily Standup]([[daily_standup]])
-- [Weekly Review]([[weekly_review]])
+- [[daily_standup|Daily Standup]]
+- [[weekly_review|Weekly Review]]
 ----------------------------------------
 Found 2 file(s) scheduled for review today
 ```
