@@ -1,37 +1,25 @@
 # Markdown Review Daily
 
-A Go program that scans markdown files for YAML frontmatter containing `review_schedule` fields in cron format and identifies which files are scheduled for review at the current time.
+A Go program that scans markdown files for YAML frontmatter containing `review_schedule` fields in cron format and identifies which files are scheduled for review today (or now).
 
 ## How It Works
 
 The program checks if **today** is a day that matches the cron schedule, regardless of the current time. For example:
-- A file with schedule `"0 9 * * *"` (daily at 9 AM) will be shown **all day long** on every day
-- A file with schedule `"0 10 * * 1"` (Mondays at 10 AM) will be shown **all day on Mondays**
+- A file with schedule `"0 9 * * *"` (daily at 9 AM) will be shown on every day
+- A file with schedule `"0 10 * * 1"` (Mondays at 10 AM) will be shown on Mondays
 
 This behavior makes the tool useful as a daily review reminder - you can run it once in the morning to see all files scheduled for review that day.
 
 ## Installation
 
 ### Prerequisites
+- Make
 - Go 1.21 or higher
 
 ### Building
 
 ```bash
-go build -o markdown_review_daily markdown_review_daily.go
-```
-
-Or build for different platforms:
-
-```bash
-# Linux
-GOOS=linux GOARCH=amd64 go build -o markdown_review_daily markdown_review_daily.go
-
-# macOS
-GOOS=darwin GOARCH=amd64 go build -o markdown_review_daily markdown_review_daily.go
-
-# Windows
-GOOS=windows GOARCH=amd64 go build -o markdown_review_daily.exe markdown_review_daily.go
+make
 ```
 
 ## Usage
